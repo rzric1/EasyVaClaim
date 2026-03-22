@@ -17,8 +17,18 @@ export default async function handler(req, res) {
       apiKey: process.env.OPENAI_API_KEY,
     });
 
-    const body =
-      typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
+    let body = req.body || {};
+
+    // Handle string body safely
+    if (typeof body === "string") {
+      try {
+        body = JSON.parse(body);
+      } catch (parseError) {
+        return res.status(400).json({
+          error: "Invalid JSON body.",
+        });
+      }
+    }
 
     const {
       serviceConnected,
@@ -34,7 +44,12 @@ export default async function handler(req, res) {
       conditions,
       symptoms,
       goal,
-    });
+    }) || {
+      classification: [],
+      ruleInsights: [],
+      possibleSecondaries: [],
+      evidenceFocus: [],
+    };
 
     const prompt = `
 A veteran submitted the following intake:
@@ -46,16 +61,32 @@ A veteran submitted the following intake:
 - Goal: ${goal || "Not provided"}
 
 Internal classification guidance:
-${rules.classification.length ? "- " + rules.classification.join("\n- ") : "- No classification guidance available."}
+${
+  rules.classification?.length
+    ? "- " + rules.classification.join("\n- ")
+    : "- No classification guidance available."
+}
 
 Internal rule insights:
-${rules.ruleInsights.length ? "- " + rules.ruleInsights.join("\n- ") : "- No rule insights available."}
+${
+  rules.ruleInsights?.length
+    ? "- " + rules.ruleInsights.join("\n- ")
+    : "- No rule insights available."
+}
 
 Potential secondary-condition pathways to consider:
-${rules.possibleSecondaries.length ? "- " + rules.possibleSecondaries.join("\n- ") : "- None identified."}
+${
+  rules.possibleSecondaries?.length
+    ? "- " + rules.possibleSecondaries.join("\n- ")
+    : "- None identified."
+}
 
 Evidence themes that may be worth mentioning:
-${rules.evidenceFocus.length ? "- " + rules.evidenceFocus.join("\n- ") : "- None identified."}
+${
+  rules.evidenceFocus?.length
+    ? "- " + rules.evidenceFocus.join("\n- ")
+    : "- None identified."
+}
 
 Instructions for the response:
 - Do not treat everything only as an increase claim if the intake suggests possible secondary conditions.
@@ -99,11 +130,11 @@ Rules:
 - Do not guarantee outcomes.
 - Keep responses practical, cautious, and easy to understand.
 - When the facts suggest both an increase path and a secondary-condition path, acknowledge both instead of picking only one.
-          `,
+          `.trim(),
         },
         {
           role: "user",
-          content: prompt,
+          content: prompt.trim(),
         },
       ],
       temperature: 0.3,
@@ -114,14 +145,11 @@ Rules:
 
     return res.status(200).json({ output });
   } catch (error) {
-    console.error("API REVIEW ERROR:", error);
+    console.error("OpenAI handler error:", error);
 
     return res.status(500).json({
-      error:
-        error?.message ||
-        error?.toString() ||
-        "Unknown backend error in /api/review.",
+      error: "Something went wrong while generating the response.",
+      details: error?.message || "Unknown error",
     });
   }
 }
-
