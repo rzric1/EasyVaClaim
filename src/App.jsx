@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 const features = [
   {
     title: "Upload claim documents",
@@ -40,8 +42,32 @@ const sectionStyle = {
 const muted = "#374151";
 const border = "#e5e7eb";
 const dark = "#000000";
+const light = "#f9fafb";
 
 export default function App() {
+  const [formData, setFormData] = useState({
+    serviceConnected: "",
+    currentRating: "",
+    conditions: "",
+    symptoms: "",
+    goal: "",
+  });
+
+  const [submitted, setSubmitted] = useState(false);
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    setSubmitted(true);
+  }
+
   return (
     <div
       style={{
@@ -99,6 +125,9 @@ export default function App() {
             <a href="#how" style={{ color: "inherit", textDecoration: "none" }}>
               How it works
             </a>
+            <a href="#review" style={{ color: "inherit", textDecoration: "none" }}>
+              Start Review
+            </a>
             <a href="#join" style={{ color: "inherit", textDecoration: "none" }}>
               Join
             </a>
@@ -155,7 +184,7 @@ export default function App() {
               }}
             >
               <a
-                href="#join"
+                href="#review"
                 style={{
                   backgroundColor: "#000000",
                   color: "#ffffff",
@@ -165,7 +194,7 @@ export default function App() {
                   fontWeight: 600,
                 }}
               >
-                Join waitlist
+                Start Claim Review
               </a>
 
               <a
@@ -314,6 +343,204 @@ export default function App() {
         </section>
 
         <section
+          id="review"
+          style={{
+            ...sectionStyle,
+            borderTop: `1px solid ${border}`,
+          }}
+        >
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+              gap: "32px",
+              alignItems: "start",
+            }}
+          >
+            <div>
+              <p
+                style={{
+                  color: muted,
+                  fontSize: "14px",
+                  fontWeight: 700,
+                  margin: 0,
+                }}
+              >
+                Start Claim Review
+              </p>
+              <h2
+                style={{
+                  fontSize: "38px",
+                  margin: "14px 0 16px",
+                  color: "#000000",
+                }}
+              >
+                Enter your information to begin
+              </h2>
+              <p
+                style={{
+                  color: muted,
+                  lineHeight: 1.8,
+                  fontSize: "17px",
+                }}
+              >
+                This intake section is the foundation for your future AI-powered
+                review flow. Veterans can enter current ratings, symptoms, and goals
+                to begin organizing next steps.
+              </p>
+            </div>
+
+            <div
+              style={{
+                border: `1px solid ${border}`,
+                borderRadius: "24px",
+                padding: "28px",
+                backgroundColor: light,
+              }}
+            >
+              <form onSubmit={handleSubmit}>
+                <div style={{ display: "grid", gap: "16px" }}>
+                  <div>
+                    <label style={{ display: "block", marginBottom: "8px", fontWeight: 600 }}>
+                      Is your condition already service connected?
+                    </label>
+                    <select
+                      name="serviceConnected"
+                      value={formData.serviceConnected}
+                      onChange={handleChange}
+                      style={inputStyle}
+                    >
+                      <option value="">Select an option</option>
+                      <option value="yes">Yes</option>
+                      <option value="no">No</option>
+                      <option value="not-sure">Not Sure</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", marginBottom: "8px", fontWeight: 600 }}>
+                      Current VA rating
+                    </label>
+                    <input
+                      type="text"
+                      name="currentRating"
+                      value={formData.currentRating}
+                      onChange={handleChange}
+                      placeholder="Example: 70% PTSD"
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", marginBottom: "8px", fontWeight: 600 }}>
+                      Conditions you want reviewed
+                    </label>
+                    <input
+                      type="text"
+                      name="conditions"
+                      value={formData.conditions}
+                      onChange={handleChange}
+                      placeholder="Example: PTSD, migraines, back pain"
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", marginBottom: "8px", fontWeight: 600 }}>
+                      Symptoms or worsening issues
+                    </label>
+                    <textarea
+                      name="symptoms"
+                      value={formData.symptoms}
+                      onChange={handleChange}
+                      placeholder="Describe your symptoms or what has worsened"
+                      rows="4"
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", marginBottom: "8px", fontWeight: 600 }}>
+                      Your goal
+                    </label>
+                    <select
+                      name="goal"
+                      value={formData.goal}
+                      onChange={handleChange}
+                      style={inputStyle}
+                    >
+                      <option value="">Select a goal</option>
+                      <option value="start-claim">Start a new claim</option>
+                      <option value="increase-rating">Increase my rating</option>
+                      <option value="secondary-conditions">Find secondary conditions</option>
+                      <option value="review-documents">Review documents</option>
+                    </select>
+                  </div>
+
+                  <button
+                    type="submit"
+                    style={{
+                      backgroundColor: "#000000",
+                      color: "#ffffff",
+                      padding: "14px 22px",
+                      borderRadius: "14px",
+                      border: "none",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      marginTop: "8px",
+                    }}
+                  >
+                    Review My Claim
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          {submitted && (
+            <div
+              style={{
+                marginTop: "28px",
+                border: `1px solid ${border}`,
+                borderRadius: "24px",
+                padding: "28px",
+                backgroundColor: "#ffffff",
+              }}
+            >
+              <p style={{ color: muted, fontSize: "14px", fontWeight: 700, marginTop: 0 }}>
+                AI Review Preview
+              </p>
+              <h3 style={{ fontSize: "28px", margin: "8px 0 18px" }}>
+                Here’s what your future AI workflow will start with
+              </h3>
+
+              <div style={{ color: muted, lineHeight: 1.9, fontSize: "16px" }}>
+                <p>
+                  <strong style={{ color: "#000000" }}>Service connected:</strong>{" "}
+                  {formData.serviceConnected || "Not provided"}
+                </p>
+                <p>
+                  <strong style={{ color: "#000000" }}>Current rating:</strong>{" "}
+                  {formData.currentRating || "Not provided"}
+                </p>
+                <p>
+                  <strong style={{ color: "#000000" }}>Conditions to review:</strong>{" "}
+                  {formData.conditions || "Not provided"}
+                </p>
+                <p>
+                  <strong style={{ color: "#000000" }}>Symptoms:</strong>{" "}
+                  {formData.symptoms || "Not provided"}
+                </p>
+                <p>
+                  <strong style={{ color: "#000000" }}>Goal:</strong>{" "}
+                  {formData.goal || "Not provided"}
+                </p>
+              </div>
+            </div>
+          )}
+        </section>
+
+        <section
           style={{
             ...sectionStyle,
             borderTop: `1px solid ${border}`,
@@ -443,3 +670,14 @@ export default function App() {
     </div>
   );
 }
+
+const inputStyle = {
+  width: "100%",
+  padding: "14px 16px",
+  borderRadius: "14px",
+  border: `1px solid ${border}`,
+  fontSize: "15px",
+  color: "#000000",
+  backgroundColor: "#ffffff",
+  boxSizing: "border-box",
+};
