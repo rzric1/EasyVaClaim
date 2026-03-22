@@ -44,6 +44,17 @@ const border = "#e5e7eb";
 const dark = "#000000";
 const light = "#f9fafb";
 
+const inputStyle = {
+  width: "100%",
+  padding: "14px 16px",
+  borderRadius: "14px",
+  border: `1px solid ${border}`,
+  fontSize: "15px",
+  color: "#000000",
+  backgroundColor: "#ffffff",
+  boxSizing: "border-box",
+};
+
 export default function App() {
   const [formData, setFormData] = useState({
     serviceConnected: "",
@@ -54,6 +65,9 @@ export default function App() {
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [aiResult, setAiResult] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -63,9 +77,35 @@ export default function App() {
     }));
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    setSubmitted(true);
+    setSubmitted(false);
+    setAiResult("");
+    setError("");
+    setLoading(true);
+
+    try {
+      const response = await fetch("/api/review", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Request failed");
+      }
+
+      setAiResult(data.output || "No result returned.");
+      setSubmitted(true);
+    } catch (err) {
+      setError(err.message || "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -497,7 +537,36 @@ export default function App() {
             </div>
           </div>
 
-          {submitted && (
+          {loading && (
+            <div
+              style={{
+                marginTop: "28px",
+                border: `1px solid ${border}`,
+                borderRadius: "24px",
+                padding: "28px",
+                backgroundColor: "#ffffff",
+              }}
+            >
+              <p style={{ margin: 0, color: muted }}>Reviewing your claim...</p>
+            </div>
+          )}
+
+          {error && (
+            <div
+              style={{
+                marginTop: "28px",
+                border: "1px solid #fecaca",
+                borderRadius: "24px",
+                padding: "28px",
+                backgroundColor: "#fef2f2",
+                color: "#991b1b",
+              }}
+            >
+              {error}
+            </div>
+          )}
+
+          {submitted && aiResult && (
             <div
               style={{
                 marginTop: "28px",
@@ -508,33 +577,17 @@ export default function App() {
               }}
             >
               <p style={{ color: muted, fontSize: "14px", fontWeight: 700, marginTop: 0 }}>
-                AI Review Preview
+                AI Claim Review
               </p>
-              <h3 style={{ fontSize: "28px", margin: "8px 0 18px" }}>
-                Here’s what your future AI workflow will start with
-              </h3>
-
-              <div style={{ color: muted, lineHeight: 1.9, fontSize: "16px" }}>
-                <p>
-                  <strong style={{ color: "#000000" }}>Service connected:</strong>{" "}
-                  {formData.serviceConnected || "Not provided"}
-                </p>
-                <p>
-                  <strong style={{ color: "#000000" }}>Current rating:</strong>{" "}
-                  {formData.currentRating || "Not provided"}
-                </p>
-                <p>
-                  <strong style={{ color: "#000000" }}>Conditions to review:</strong>{" "}
-                  {formData.conditions || "Not provided"}
-                </p>
-                <p>
-                  <strong style={{ color: "#000000" }}>Symptoms:</strong>{" "}
-                  {formData.symptoms || "Not provided"}
-                </p>
-                <p>
-                  <strong style={{ color: "#000000" }}>Goal:</strong>{" "}
-                  {formData.goal || "Not provided"}
-                </p>
+              <div
+                style={{
+                  whiteSpace: "pre-wrap",
+                  color: muted,
+                  lineHeight: 1.8,
+                  fontSize: "16px",
+                }}
+              >
+                {aiResult}
               </div>
             </div>
           )}
@@ -670,14 +723,3 @@ export default function App() {
     </div>
   );
 }
-
-const inputStyle = {
-  width: "100%",
-  padding: "14px 16px",
-  borderRadius: "14px",
-  border: `1px solid ${border}`,
-  fontSize: "15px",
-  color: "#000000",
-  backgroundColor: "#ffffff",
-  boxSizing: "border-box",
-};
