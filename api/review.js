@@ -11,7 +11,9 @@ export default async function handler(req, res) {
 
   try {
     if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({ error: "Missing OPENAI_API_KEY in Vercel environment variables." });
+      return res.status(500).json({
+        error: "Missing OPENAI_API_KEY in environment variables.",
+      });
     }
 
     const body =
@@ -48,21 +50,34 @@ Do not guarantee outcomes.
 Keep it practical and clear.
 `;
 
-    const response = await client.responses.create({
-      model: "gpt-4.1-mini",
-      input: prompt,
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a helpful educational VA claim review assistant. Do not give legal or medical advice.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0.3,
     });
 
-    return res.status(200).json({
-      output: response.output_text || "No output returned.",
-    });
+    const output =
+      response.choices?.[0]?.message?.content || "No output returned.";
+
+    return res.status(200).json({ output });
   } catch (error) {
     console.error("API REVIEW ERROR:", error);
 
     return res.status(500).json({
       error:
         error?.message ||
-        "Something went wrong while reviewing the claim.",
+        error?.toString() ||
+        "Unknown backend error in /api/review.",
     });
   }
 }
