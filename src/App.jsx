@@ -954,7 +954,107 @@ export default function App() {
                 fontWeight: 700,
                 margin: 0,
               }}
-            >
+            ><section
+  style={{
+    ...sectionStyle,
+    borderTop: `1px solid ${border}`,
+  }}
+>
+  <div style={{ maxWidth: "920px" }}>
+    <p
+      style={{
+        color: muted,
+        fontSize: "14px",
+        fontWeight: 700,
+        margin: 0,
+      }}
+    >
+      Supporting Claim Evidence
+    </p>
+    <h2
+      style={{
+        fontSize: "38px",
+        margin: "14px 0 16px",
+        color: dark,
+      }}
+    >
+      Documents that may help strengthen a claim
+    </h2>
+    <p
+      style={{
+        color: muted,
+        lineHeight: 1.8,
+        fontSize: "18px",
+        marginTop: 0,
+      }}
+    >
+      These supporting documents can help strengthen a VA disability claim by
+      explaining severity, service connection, daily impact, and secondary conditions.
+    </p>
+
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+        gap: "18px",
+        marginTop: "28px",
+      }}
+    >
+      <ResultCard
+        title="1. Nexus Letter"
+        body={`**Purpose:** A nexus letter provides a professional medical opinion connecting a current diagnosis to an in-service event, injury, illness, or exposure.
+
+**Why it matters:** A DBQ helps describe severity, but a nexus letter helps explain why the condition may be related to military service.
+
+**Who typically writes it:** A licensed healthcare professional such as an MD, DO, NP, PA, or psychologist, depending on the condition.`}
+        tone="info"
+      />
+
+      <ResultCard
+        title="2. Statement in Support of Claim"
+        body={`**Purpose:** This is the veteran’s personal statement describing when symptoms began, how they have continued or worsened, and how they affect daily life, relationships, and work.
+
+**Why it matters:** It helps fill in gaps when medical or service records are limited, especially for conditions like PTSD, migraines, sleep issues, or pain.`}
+      />
+
+      <ResultCard
+        title="3. Buddy Letter"
+        body={`**Purpose:** A buddy letter helps support a claim by providing observations from people who knew the veteran during or after service.
+
+**Who can write one:** Fellow service members, family members, friends, coworkers, or employers.
+
+**Why it matters:** These letters can help show behavioral, emotional, or physical changes that support the veteran’s account.`}
+      />
+
+      <ResultCard
+        title="4. Secondary Condition Letter"
+        body={`**Purpose:** This type of letter explains how one condition may have caused or aggravated another condition.
+
+**Why it matters:** It is especially useful when a veteran is claiming a secondary condition, such as migraines, depression, erectile dysfunction, or sleep issues caused or worsened by an already service-connected disability.
+
+**Best use:** It should clearly explain the medical relationship between the primary and secondary condition.`}
+        tone="warning"
+      />
+    </div>
+
+    <div
+      style={{
+        marginTop: "22px",
+        padding: "18px 20px",
+        borderRadius: "18px",
+        border: `1px solid ${border}`,
+        backgroundColor: "#ffffff",
+      }}
+    >
+      <p style={{ margin: 0, color: muted, lineHeight: 1.8, fontSize: "14px" }}>
+        <strong style={{ color: dark }}>Disclaimer:</strong> This information is for
+        educational purposes only and is not legal or medical advice. Veterans should
+        consider speaking with an accredited representative or licensed medical
+        professional for guidance specific to their case.
+      </p>
+    </div>
+  </div>
+</section>
               Join
             </p>
             <h2
