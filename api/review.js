@@ -10,13 +10,20 @@ export default async function handler(req, res) {
   }
 
   try {
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({ error: "Missing OPENAI_API_KEY in Vercel environment variables." });
+    }
+
+    const body =
+      typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
+
     const {
       serviceConnected,
       currentRating,
       conditions,
       symptoms,
       goal,
-    } = req.body || {};
+    } = body;
 
     const prompt = `
 You are an educational VA claim review assistant.
@@ -42,17 +49,20 @@ Keep it practical and clear.
 `;
 
     const response = await client.responses.create({
-      model: "gpt-5",
+      model: "gpt-4.1-mini",
       input: prompt,
     });
 
     return res.status(200).json({
-      output: response.output_text,
+      output: response.output_text || "No output returned.",
     });
   } catch (error) {
-    console.error(error);
+    console.error("API REVIEW ERROR:", error);
+
     return res.status(500).json({
-      error: "Something went wrong while reviewing the claim.",
+      error:
+        error?.message ||
+        "Something went wrong while reviewing the claim.",
     });
   }
 }
