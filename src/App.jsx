@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 const features = [
   {
@@ -39,10 +39,11 @@ const sectionStyle = {
   padding: "72px 24px",
 };
 
-const muted = "#374151";
-const border = "#e5e7eb";
-const dark = "#000000";
-const light = "#f9fafb";
+const muted = "#475569";
+const border = "#e2e8f0";
+const dark = "#0f172a";
+const light = "#f8fafc";
+const accent = "#111827";
 
 const inputStyle = {
   width: "100%",
@@ -54,6 +55,158 @@ const inputStyle = {
   backgroundColor: "#ffffff",
   boxSizing: "border-box",
 };
+
+function parseAiSections(text) {
+  if (!text) return [];
+
+  const normalized = text.replace(/\r/g, "").trim();
+
+  const parts = normalized.split(/\n(?=###\s*\d+\.)/g).filter(Boolean);
+
+  if (parts.length === 0) {
+    return [
+      {
+        title: "AI Claim Review",
+        body: normalized,
+      },
+    ];
+  }
+
+  return parts.map((part) => {
+    const lines = part.split("\n").filter(Boolean);
+    const heading = lines.shift() || "";
+    const title = heading.replace(/^###\s*\d+\.\s*/, "").trim();
+    const body = lines.join("\n").trim();
+    return { title, body };
+  });
+}
+
+function renderRichText(text) {
+  const lines = text.split("\n").filter((line) => line.trim() !== "");
+  const elements = [];
+  let bullets = [];
+
+  const flushBullets = (keyBase) => {
+    if (bullets.length > 0) {
+      elements.push(
+        <ul
+          key={`ul-${keyBase}-${elements.length}`}
+          style={{
+            margin: "10px 0 0 0",
+            paddingLeft: "20px",
+            color: muted,
+            lineHeight: 1.8,
+          }}
+        >
+          {bullets.map((item, index) => (
+            <li key={`${keyBase}-li-${index}`} style={{ marginBottom: "8px" }}>
+              {renderInlineBold(item)}
+            </li>
+          ))}
+        </ul>
+      );
+      bullets = [];
+    }
+  };
+
+  lines.forEach((line, index) => {
+    const trimmed = line.trim();
+
+    if (trimmed.startsWith("- ")) {
+      bullets.push(trimmed.slice(2));
+      return;
+    }
+
+    flushBullets(index);
+
+    elements.push(
+      <p
+        key={`p-${index}`}
+        style={{
+          color: muted,
+          lineHeight: 1.85,
+          margin: "10px 0 0 0",
+          fontSize: "15px",
+        }}
+      >
+        {renderInlineBold(trimmed)}
+      </p>
+    );
+  });
+
+  flushBullets("final");
+
+  return elements;
+}
+
+function renderInlineBold(text) {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+
+  return parts.map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={index} style={{ color: dark }}>
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return <span key={index}>{part}</span>;
+  });
+}
+
+function ResultCard({ title, body, tone = "default" }) {
+  const styles = {
+    default: {
+      background: "#ffffff",
+      borderColor: border,
+      titleBg: "#f8fafc",
+    },
+    warning: {
+      background: "#fff7ed",
+      borderColor: "#fed7aa",
+      titleBg: "#ffedd5",
+    },
+    info: {
+      background: "#f8fafc",
+      borderColor: "#cbd5e1",
+      titleBg: "#eef2ff",
+    },
+  };
+
+  const style = styles[tone] || styles.default;
+
+  return (
+    <div
+      style={{
+        border: `1px solid ${style.borderColor}`,
+        borderRadius: "22px",
+        overflow: "hidden",
+        backgroundColor: style.background,
+        boxShadow: "0 8px 24px rgba(15, 23, 42, 0.04)",
+      }}
+    >
+      <div
+        style={{
+          padding: "14px 18px",
+          borderBottom: `1px solid ${style.borderColor}`,
+          backgroundColor: style.titleBg,
+        }}
+      >
+        <h3
+          style={{
+            margin: 0,
+            fontSize: "18px",
+            color: dark,
+          }}
+        >
+          {title}
+        </h3>
+      </div>
+
+      <div style={{ padding: "18px" }}>{renderRichText(body)}</div>
+    </div>
+  );
+}
 
 export default function App() {
   const [formData, setFormData] = useState({
@@ -116,6 +269,8 @@ export default function App() {
     }
   }
 
+  const aiSections = useMemo(() => parseAiSections(aiResult), [aiResult]);
+
   return (
     <div
       style={{
@@ -130,7 +285,8 @@ export default function App() {
           borderBottom: `1px solid ${border}`,
           position: "sticky",
           top: 0,
-          backgroundColor: "#ffffff",
+          backgroundColor: "rgba(255,255,255,0.92)",
+          backdropFilter: "blur(10px)",
           zIndex: 10,
         }}
       >
@@ -152,7 +308,7 @@ export default function App() {
               letterSpacing: "0.22em",
               textTransform: "uppercase",
               color: muted,
-              fontWeight: 700,
+              fontWeight: 800,
             }}
           >
             Tactical Claims AI
@@ -203,7 +359,7 @@ export default function App() {
                 lineHeight: 1.05,
                 letterSpacing: "-0.03em",
                 margin: "18px 0 20px",
-                color: "#000000",
+                color: dark,
               }}
             >
               Understand your VA disability claim with more clarity
@@ -218,9 +374,9 @@ export default function App() {
                 margin: 0,
               }}
             >
-              Tactical Claims AI is being built to help veterans review documents,
-              identify gaps, and better understand possible next steps before filing
-              or pursuing an increase.
+              Tactical Claims AI helps veterans organize claim information, review
+              symptoms, and generate clearer next-step guidance before filing or
+              pursuing an increase.
             </p>
 
             <div
@@ -234,12 +390,13 @@ export default function App() {
               <a
                 href="#review"
                 style={{
-                  backgroundColor: "#000000",
+                  backgroundColor: accent,
                   color: "#ffffff",
                   padding: "14px 22px",
                   borderRadius: "14px",
                   textDecoration: "none",
                   fontWeight: 600,
+                  boxShadow: "0 10px 24px rgba(17, 24, 39, 0.18)",
                 }}
               >
                 Start Claim Review
@@ -249,7 +406,7 @@ export default function App() {
                 href="#how"
                 style={{
                   border: `1px solid ${border}`,
-                  color: "#000000",
+                  color: dark,
                   padding: "14px 22px",
                   borderRadius: "14px",
                   textDecoration: "none",
@@ -288,12 +445,21 @@ export default function App() {
             }}
           >
             {features.map((feature) => (
-              <div key={feature.title}>
+              <div
+                key={feature.title}
+                style={{
+                  padding: "24px",
+                  border: `1px solid ${border}`,
+                  borderRadius: "22px",
+                  backgroundColor: "#ffffff",
+                  boxShadow: "0 8px 24px rgba(15, 23, 42, 0.04)",
+                }}
+              >
                 <h2
                   style={{
                     fontSize: "22px",
                     marginBottom: "12px",
-                    color: "#000000",
+                    color: dark,
                   }}
                 >
                   {feature.title}
@@ -334,7 +500,7 @@ export default function App() {
               style={{
                 fontSize: "38px",
                 margin: "14px 0 0",
-                color: "#000000",
+                color: dark,
               }}
             >
               Simple by design
@@ -360,9 +526,9 @@ export default function App() {
               >
                 <div
                   style={{
-                    color: "#6b7280",
+                    color: "#64748b",
                     fontSize: "13px",
-                    fontWeight: 700,
+                    fontWeight: 800,
                   }}
                 >
                   {step.number}
@@ -371,7 +537,7 @@ export default function App() {
                   style={{
                     fontSize: "24px",
                     margin: "14px 0 10px",
-                    color: "#000000",
+                    color: dark,
                   }}
                 >
                   {step.title}
@@ -420,7 +586,7 @@ export default function App() {
                 style={{
                   fontSize: "38px",
                   margin: "14px 0 16px",
-                  color: "#000000",
+                  color: dark,
                 }}
               >
                 Enter your information to begin
@@ -432,9 +598,8 @@ export default function App() {
                   fontSize: "17px",
                 }}
               >
-                This intake section is the foundation for your future AI-powered
-                review flow. Veterans can enter current ratings, symptoms, and goals
-                to begin organizing next steps.
+                Enter your current ratings, symptoms, and goals to receive a
+                structured educational review with clearer next steps.
               </p>
             </div>
 
@@ -444,6 +609,7 @@ export default function App() {
                 borderRadius: "24px",
                 padding: "28px",
                 backgroundColor: light,
+                boxShadow: "0 10px 30px rgba(15, 23, 42, 0.05)",
               }}
             >
               <form onSubmit={handleSubmit}>
@@ -528,12 +694,12 @@ export default function App() {
                   <button
                     type="submit"
                     style={{
-                      backgroundColor: "#000000",
+                      backgroundColor: accent,
                       color: "#ffffff",
                       padding: "14px 22px",
                       borderRadius: "14px",
                       border: "none",
-                      fontWeight: 600,
+                      fontWeight: 700,
                       cursor: "pointer",
                       marginTop: "8px",
                     }}
@@ -551,11 +717,13 @@ export default function App() {
                 marginTop: "28px",
                 border: `1px solid ${border}`,
                 borderRadius: "24px",
-                padding: "28px",
+                padding: "24px",
                 backgroundColor: "#ffffff",
               }}
             >
-              <p style={{ margin: 0, color: muted }}>Reviewing your claim...</p>
+              <p style={{ margin: 0, color: muted, fontWeight: 600 }}>
+                Reviewing your claim...
+              </p>
             </div>
           )}
 
@@ -565,7 +733,7 @@ export default function App() {
                 marginTop: "28px",
                 border: "1px solid #fecaca",
                 borderRadius: "24px",
-                padding: "28px",
+                padding: "24px",
                 backgroundColor: "#fef2f2",
                 color: "#991b1b",
               }}
@@ -575,27 +743,76 @@ export default function App() {
           )}
 
           {submitted && aiResult && (
-            <div
-              style={{
-                marginTop: "28px",
-                border: `1px solid ${border}`,
-                borderRadius: "24px",
-                padding: "28px",
-                backgroundColor: "#ffffff",
-              }}
-            >
-              <p style={{ color: muted, fontSize: "14px", fontWeight: 700, marginTop: 0 }}>
-                AI Claim Review
-              </p>
+            <div style={{ marginTop: "32px" }}>
               <div
                 style={{
-                  whiteSpace: "pre-wrap",
-                  color: muted,
-                  lineHeight: 1.8,
-                  fontSize: "16px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: "16px",
+                  flexWrap: "wrap",
+                  marginBottom: "18px",
                 }}
               >
-                {aiResult}
+                <div>
+                  <p
+                    style={{
+                      color: muted,
+                      fontSize: "14px",
+                      fontWeight: 700,
+                      margin: 0,
+                    }}
+                  >
+                    AI Claim Review
+                  </p>
+                  <h3
+                    style={{
+                      margin: "8px 0 0 0",
+                      fontSize: "30px",
+                      color: dark,
+                    }}
+                  >
+                    Your structured review is ready
+                  </h3>
+                </div>
+
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    borderRadius: "999px",
+                    backgroundColor: "#eef2ff",
+                    color: "#3730a3",
+                    fontWeight: 700,
+                    fontSize: "13px",
+                  }}
+                >
+                  Educational Guidance
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                  gap: "18px",
+                }}
+              >
+                {aiSections.map((section, index) => {
+                  const lower = section.title.toLowerCase();
+
+                  let tone = "default";
+                  if (lower.includes("disclaimer")) tone = "warning";
+                  if (lower.includes("starting point")) tone = "info";
+
+                  return (
+                    <ResultCard
+                      key={`${section.title}-${index}`}
+                      title={section.title}
+                      body={section.body}
+                      tone={tone}
+                    />
+                  );
+                })}
               </div>
             </div>
           )}
@@ -629,7 +846,7 @@ export default function App() {
                 style={{
                   fontSize: "38px",
                   margin: "14px 0 0",
-                  color: "#000000",
+                  color: dark,
                 }}
               >
                 Clearer insights before your next move
@@ -672,7 +889,7 @@ export default function App() {
               style={{
                 fontSize: "38px",
                 margin: "14px 0 0",
-                color: "#000000",
+                color: dark,
               }}
             >
               Get updates as the platform is built
@@ -713,12 +930,12 @@ export default function App() {
               <button
                 type="submit"
                 style={{
-                  backgroundColor: "#000000",
+                  backgroundColor: accent,
                   color: "#ffffff",
                   padding: "14px 22px",
                   borderRadius: "14px",
                   border: "none",
-                  fontWeight: 600,
+                  fontWeight: 700,
                   cursor: "pointer",
                 }}
               >
