@@ -44,6 +44,7 @@ const border = "#e2e8f0";
 const dark = "#0f172a";
 const light = "#f8fafc";
 const accent = "#111827";
+const blue = "#2563eb";
 
 const inputStyle = {
   width: "100%",
@@ -60,7 +61,6 @@ function parseAiSections(text) {
   if (!text) return [];
 
   const normalized = text.replace(/\r/g, "").trim();
-
   const parts = normalized.split(/\n(?=###\s*\d+\.)/g).filter(Boolean);
 
   if (parts.length === 0) {
@@ -78,6 +78,21 @@ function parseAiSections(text) {
     const title = heading.replace(/^###\s*\d+\.\s*/, "").trim();
     const body = lines.join("\n").trim();
     return { title, body };
+  });
+}
+
+function renderInlineBold(text) {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+
+  return parts.map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={index} style={{ color: dark }}>
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return <span key={index}>{part}</span>;
   });
 }
 
@@ -137,21 +152,6 @@ function renderRichText(text) {
   flushBullets("final");
 
   return elements;
-}
-
-function renderInlineBold(text) {
-  const parts = text.split(/(\*\*.*?\*\*)/g);
-
-  return parts.map((part, index) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return (
-        <strong key={index} style={{ color: dark }}>
-          {part.slice(2, -2)}
-        </strong>
-      );
-    }
-    return <span key={index}>{part}</span>;
-  });
 }
 
 function ResultCard({ title, body, tone = "default" }) {
@@ -217,6 +217,7 @@ export default function App() {
     goal: "",
   });
 
+  const [uploadedFile, setUploadedFile] = useState(null);
   const [submitted, setSubmitted] = useState(false);
   const [aiResult, setAiResult] = useState("");
   const [loading, setLoading] = useState(false);
@@ -228,6 +229,11 @@ export default function App() {
       ...prev,
       [name]: value,
     }));
+  }
+
+  function handleFileChange(e) {
+    const file = e.target.files?.[0] || null;
+    setUploadedFile(file);
   }
 
   async function handleSubmit(e) {
@@ -243,7 +249,10 @@ export default function App() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          uploadedFileName: uploadedFile ? uploadedFile.name : "",
+        }),
       });
 
       const raw = await response.text();
@@ -256,7 +265,7 @@ export default function App() {
       }
 
       if (!response.ok) {
-        throw new Error(data.error || "Request failed");
+        throw new Error(data.error || data.details || "Request failed");
       }
 
       setAiResult(data.output || "No result returned.");
@@ -614,6 +623,69 @@ export default function App() {
             >
               <form onSubmit={handleSubmit}>
                 <div style={{ display: "grid", gap: "16px" }}>
+                  <div>
+                    <label style={{ display: "block", marginBottom: "8px", fontWeight: 600 }}>
+                      Upload Documents
+                    </label>
+
+                    <label
+                      htmlFor="record-upload"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: blue,
+                        color: "#ffffff",
+                        padding: "14px 20px",
+                        borderRadius: "14px",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        border: "none",
+                        boxShadow: "0 10px 24px rgba(37, 99, 235, 0.25)",
+                      }}
+                    >
+                      Upload VA or Medical Records
+                    </label>
+
+                    <input
+                      id="record-upload"
+                      type="file"
+                      accept=".pdf,.doc,.docx,.txt"
+                      onChange={handleFileChange}
+                      style={{ display: "none" }}
+                    />
+
+                    <p
+                      style={{
+                        marginTop: "10px",
+                        marginBottom: 0,
+                        color: muted,
+                        fontSize: "13px",
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      Accepted files: PDF, decision letters, DBQs, nexus letters, and
+                      medical records.
+                    </p>
+
+                    {uploadedFile && (
+                      <div
+                        style={{
+                          marginTop: "12px",
+                          padding: "12px 14px",
+                          borderRadius: "12px",
+                          backgroundColor: "#eff6ff",
+                          border: "1px solid #bfdbfe",
+                          color: "#1e3a8a",
+                          fontSize: "14px",
+                          fontWeight: 600,
+                        }}
+                      >
+                        Selected file: {uploadedFile.name}
+                      </div>
+                    )}
+                  </div>
+
                   <div>
                     <label style={{ display: "block", marginBottom: "8px", fontWeight: 600 }}>
                       Is your condition already service connected?
