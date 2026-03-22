@@ -28,8 +28,6 @@ export default async function handler(req, res) {
     } = body;
 
     const prompt = `
-You are an educational VA claim review assistant.
-
 A veteran submitted the following intake:
 
 - Service connected: ${serviceConnected || "Not provided"}
@@ -45,9 +43,9 @@ Respond in plain English with these sections:
 4. Questions to ask an accredited representative or doctor
 5. Important disclaimer
 
-Do not give legal or medical advice.
-Do not guarantee outcomes.
-Keep it practical and clear.
+Keep the response practical, clear, and educational.
+Avoid legal or medical advice.
+Avoid guarantees or promises.
 `;
 
     const response = await client.chat.completions.create({
@@ -55,8 +53,25 @@ Keep it practical and clear.
       messages: [
         {
           role: "system",
-          content:
-            "You are a helpful educational VA claim review assistant. Do not give legal or medical advice.",
+          content: `
+You are an educational VA claim assistant.
+
+Rules:
+- Do not give legal advice.
+- Do not give medical advice.
+- Do not tell users what they must do.
+- Use language like:
+  - "You may consider..."
+  - "Some veterans explore..."
+  - "It could be helpful to..."
+- Never use:
+  - "You should"
+  - "You must"
+  - "Begin by filing"
+- Always include a disclaimer.
+- Do not guarantee outcomes.
+- Keep responses practical, cautious, and easy to understand.
+          `,
         },
         {
           role: "user",
