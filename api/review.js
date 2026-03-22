@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { applyRules } from "./rules";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -27,6 +28,14 @@ export default async function handler(req, res) {
       goal,
     } = body;
 
+    const rules = applyRules({
+      serviceConnected,
+      currentRating,
+      conditions,
+      symptoms,
+      goal,
+    });
+
     const prompt = `
 A veteran submitted the following intake:
 
@@ -36,16 +45,34 @@ A veteran submitted the following intake:
 - Symptoms: ${symptoms || "Not provided"}
 - Goal: ${goal || "Not provided"}
 
-Respond in plain English with these sections:
-1. Suggested starting point
-2. Possible evidence to gather
-3. Possible secondary issues to explore
-4. Questions to ask an accredited representative or doctor
-5. Important disclaimer
+Internal classification guidance:
+${rules.classification.length ? "- " + rules.classification.join("\n- ") : "- No classification guidance available."}
 
-Keep the response practical, clear, and educational.
-Avoid legal or medical advice.
-Avoid guarantees or promises.
+Internal rule insights:
+${rules.ruleInsights.length ? "- " + rules.ruleInsights.join("\n- ") : "- No rule insights available."}
+
+Potential secondary-condition pathways to consider:
+${rules.possibleSecondaries.length ? "- " + rules.possibleSecondaries.join("\n- ") : "- None identified."}
+
+Evidence themes that may be worth mentioning:
+${rules.evidenceFocus.length ? "- " + rules.evidenceFocus.join("\n- ") : "- None identified."}
+
+Instructions for the response:
+- Do not treat everything only as an increase claim if the intake suggests possible secondary conditions.
+- Distinguish clearly between:
+  1. possible increase path
+  2. possible secondary-condition path
+  3. possible need for more medical clarification
+- Keep the tone educational, practical, and cautious.
+- Use the user's actual symptoms when relevant.
+- Do not overstate certainty.
+
+Respond in plain English with these sections:
+### 1. Suggested Starting Point
+### 2. Possible Evidence to Gather
+### 3. Possible Secondary Issues to Explore
+### 4. Questions to Ask an Accredited Representative or Doctor
+### 5. Important Disclaimer
 `;
 
     const response = await client.chat.completions.create({
@@ -71,6 +98,7 @@ Rules:
 - Always include a disclaimer.
 - Do not guarantee outcomes.
 - Keep responses practical, cautious, and easy to understand.
+- When the facts suggest both an increase path and a secondary-condition path, acknowledge both instead of picking only one.
           `,
         },
         {
