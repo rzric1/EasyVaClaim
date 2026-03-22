@@ -64,12 +64,7 @@ function parseAiSections(text) {
   const parts = normalized.split(/\n(?=###\s*\d+\.)/g).filter(Boolean);
 
   if (parts.length === 0) {
-    return [
-      {
-        title: "AI Claim Review",
-        body: normalized,
-      },
-    ];
+    return [{ title: "AI Claim Review", body: normalized }];
   }
 
   return parts.map((part) => {
@@ -150,7 +145,6 @@ function renderRichText(text) {
   });
 
   flushBullets("final");
-
   return elements;
 }
 
@@ -192,20 +186,114 @@ function ResultCard({ title, body, tone = "default" }) {
           backgroundColor: style.titleBg,
         }}
       >
-        <h3
-          style={{
-            margin: 0,
-            fontSize: "18px",
-            color: dark,
-          }}
-        >
-          {title}
-        </h3>
+        <h3 style={{ margin: 0, fontSize: "18px", color: dark }}>{title}</h3>
       </div>
 
       <div style={{ padding: "18px" }}>{renderRichText(body)}</div>
     </div>
   );
+}
+
+function buildNexusDraft(formData) {
+  return `NEXUS LETTER DRAFT
+Draft only — must be reviewed, corrected if needed, and signed by the appropriate licensed medical professional.
+
+Provider Information
+Name: [Provider Name]
+Credentials: [MD / DO / NP / PA / Psychologist]
+License Number: [License Number]
+Clinic / Practice: [Clinic Name]
+Address: [Clinic Address]
+Phone: [Clinic Phone]
+
+Veteran Information
+Veteran Name: [Veteran Name]
+Current Service-Connected Condition: ${formData.currentRating || "[Current service-connected condition]"}
+Condition Being Addressed: ${formData.conditions || "[Claimed condition]"}
+
+Medical Opinion
+I have reviewed the veteran's available medical history, reported symptoms, and relevant records. Based on my professional review, it is my medical opinion that the veteran's claimed condition(s), including ${formData.conditions || "[claimed condition]"}, are at least as likely as not related to the veteran's military service or to an already service-connected condition, if supported by the full medical record and clinical evaluation.
+
+Reported Symptoms / History
+${formData.symptoms || "[Insert symptom history and medical findings here]"}
+
+Rationale
+This draft should be updated by the provider with the medical basis for the opinion, including:
+- symptom timeline
+- treatment history
+- examination findings
+- relationship between the primary and claimed condition
+- medical reasoning supporting causation or aggravation
+
+Signature Block
+Provider Signature: ______________________
+Printed Name: ___________________________
+Date: _________________________________
+`;
+}
+
+function buildBuddyDraft(formData) {
+  return `BUDDY LETTER DRAFT
+Draft only — must be reviewed, corrected if needed, and signed by the actual witness.
+
+Buddy / Witness Information
+Full Name: [Buddy Full Name]
+Relationship to Veteran: [Relationship]
+Phone / Email: [Contact Information]
+
+Statement
+My name is [Buddy Full Name], and I am the veteran's [relationship]. I have known the veteran since [time period].
+
+During the time I have known the veteran, I have personally observed the following issues:
+- ${formData.conditions || "[Condition or symptom observed]"}
+- ${formData.symptoms || "[Observed impact on daily life]"}
+- [Additional observations]
+
+I have noticed changes in the veteran's daily functioning, behavior, mood, sleep, work, or physical abilities. These observations are based on my personal knowledge and direct experience.
+
+Additional Details
+This statement may be updated with examples such as:
+- when the witness first noticed symptoms
+- how often symptoms occur
+- how the symptoms affect work, relationships, sleep, or routine activities
+
+Signature Block
+Signature: ______________________
+Printed Name: ___________________
+Date: __________________________
+`;
+}
+
+function buildPersonalStatementDraft(formData) {
+  return `STATEMENT IN SUPPORT OF CLAIM DRAFT
+Draft only — must be reviewed and signed by the veteran before submission.
+
+Veteran Statement
+I am submitting this statement in support of my claim. I am currently reporting issues related to ${formData.conditions || "[condition]"}.
+
+Current Service-Connected Status
+Service connected: ${formData.serviceConnected || "[yes/no/not sure]"}
+Current rating: ${formData.currentRating || "[current rating]"}
+
+My Symptoms
+${formData.symptoms || "[Describe symptoms, onset, worsening, frequency, and impact]"}
+
+How This Affects My Life
+These symptoms affect my daily life in areas such as:
+- work and concentration
+- sleep and rest
+- relationships and family life
+- physical activity and routine tasks
+
+My Current Goal
+${formData.goal || "[goal]"}
+
+I certify that this statement is true to the best of my knowledge.
+
+Signature Block
+Veteran Signature: ______________________
+Date: _________________________________
+`;
 }
 
 export default function App() {
@@ -222,6 +310,8 @@ export default function App() {
   const [aiResult, setAiResult] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [draftType, setDraftType] = useState("");
+  const [draftText, setDraftText] = useState("");
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -234,6 +324,26 @@ export default function App() {
   function handleFileChange(e) {
     const file = e.target.files?.[0] || null;
     setUploadedFile(file);
+  }
+
+  function generateDraft(type) {
+    setDraftType(type);
+
+    if (type === "nexus") {
+      setDraftText(buildNexusDraft(formData));
+    } else if (type === "buddy") {
+      setDraftText(buildBuddyDraft(formData));
+    } else if (type === "statement") {
+      setDraftText(buildPersonalStatementDraft(formData));
+    }
+  }
+
+  async function copyDraft() {
+    try {
+      await navigator.clipboard.writeText(draftText);
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   async function handleSubmit(e) {
@@ -351,14 +461,7 @@ export default function App() {
       <main>
         <section style={sectionStyle}>
           <div style={{ maxWidth: "760px" }}>
-            <p
-              style={{
-                color: muted,
-                fontSize: "14px",
-                fontWeight: 700,
-                margin: 0,
-              }}
-            >
+            <p style={{ color: muted, fontSize: "14px", fontWeight: 700, margin: 0 }}>
               Veteran Claim Intelligence Platform
             </p>
 
@@ -427,13 +530,7 @@ export default function App() {
               </a>
             </div>
 
-            <p
-              style={{
-                marginTop: "16px",
-                fontSize: "13px",
-                color: muted,
-              }}
-            >
+            <p style={{ marginTop: "16px", fontSize: "13px", color: muted }}>
               Educational use only. Not legal or medical advice.
             </p>
           </div>
@@ -441,10 +538,7 @@ export default function App() {
 
         <section
           id="features"
-          style={{
-            ...sectionStyle,
-            borderTop: `1px solid ${border}`,
-          }}
+          style={{ ...sectionStyle, borderTop: `1px solid ${border}` }}
         >
           <div
             style={{
@@ -464,22 +558,10 @@ export default function App() {
                   boxShadow: "0 8px 24px rgba(15, 23, 42, 0.04)",
                 }}
               >
-                <h2
-                  style={{
-                    fontSize: "22px",
-                    marginBottom: "12px",
-                    color: dark,
-                  }}
-                >
+                <h2 style={{ fontSize: "22px", marginBottom: "12px", color: dark }}>
                   {feature.title}
                 </h2>
-                <p
-                  style={{
-                    color: muted,
-                    lineHeight: 1.8,
-                    margin: 0,
-                  }}
-                >
+                <p style={{ color: muted, lineHeight: 1.8, margin: 0 }}>
                   {feature.text}
                 </p>
               </div>
@@ -489,29 +571,13 @@ export default function App() {
 
         <section
           id="how"
-          style={{
-            ...sectionStyle,
-            borderTop: `1px solid ${border}`,
-          }}
+          style={{ ...sectionStyle, borderTop: `1px solid ${border}` }}
         >
           <div style={{ maxWidth: "640px", marginBottom: "28px" }}>
-            <p
-              style={{
-                color: muted,
-                fontSize: "14px",
-                fontWeight: 700,
-                margin: 0,
-              }}
-            >
+            <p style={{ color: muted, fontSize: "14px", fontWeight: 700, margin: 0 }}>
               How it works
             </p>
-            <h2
-              style={{
-                fontSize: "38px",
-                margin: "14px 0 0",
-                color: dark,
-              }}
-            >
+            <h2 style={{ fontSize: "38px", margin: "14px 0 0", color: dark }}>
               Simple by design
             </h2>
           </div>
@@ -533,31 +599,13 @@ export default function App() {
                   backgroundColor: "#ffffff",
                 }}
               >
-                <div
-                  style={{
-                    color: "#64748b",
-                    fontSize: "13px",
-                    fontWeight: 800,
-                  }}
-                >
+                <div style={{ color: "#64748b", fontSize: "13px", fontWeight: 800 }}>
                   {step.number}
                 </div>
-                <h3
-                  style={{
-                    fontSize: "24px",
-                    margin: "14px 0 10px",
-                    color: dark,
-                  }}
-                >
+                <h3 style={{ fontSize: "24px", margin: "14px 0 10px", color: dark }}>
                   {step.title}
                 </h3>
-                <p
-                  style={{
-                    color: muted,
-                    lineHeight: 1.8,
-                    margin: 0,
-                  }}
-                >
+                <p style={{ color: muted, lineHeight: 1.8, margin: 0 }}>
                   {step.text}
                 </p>
               </div>
@@ -567,10 +615,7 @@ export default function App() {
 
         <section
           id="review"
-          style={{
-            ...sectionStyle,
-            borderTop: `1px solid ${border}`,
-          }}
+          style={{ ...sectionStyle, borderTop: `1px solid ${border}` }}
         >
           <div
             style={{
@@ -581,32 +626,13 @@ export default function App() {
             }}
           >
             <div>
-              <p
-                style={{
-                  color: muted,
-                  fontSize: "14px",
-                  fontWeight: 700,
-                  margin: 0,
-                }}
-              >
+              <p style={{ color: muted, fontSize: "14px", fontWeight: 700, margin: 0 }}>
                 Start Claim Review
               </p>
-              <h2
-                style={{
-                  fontSize: "38px",
-                  margin: "14px 0 16px",
-                  color: dark,
-                }}
-              >
+              <h2 style={{ fontSize: "38px", margin: "14px 0 16px", color: dark }}>
                 Enter your information to begin
               </h2>
-              <p
-                style={{
-                  color: muted,
-                  lineHeight: 1.8,
-                  fontSize: "17px",
-                }}
-              >
+              <p style={{ color: muted, lineHeight: 1.8, fontSize: "17px" }}>
                 Enter your current ratings, symptoms, and goals to receive a
                 structured educational review with clearer next steps.
               </p>
@@ -827,23 +853,10 @@ export default function App() {
                 }}
               >
                 <div>
-                  <p
-                    style={{
-                      color: muted,
-                      fontSize: "14px",
-                      fontWeight: 700,
-                      margin: 0,
-                    }}
-                  >
+                  <p style={{ color: muted, fontSize: "14px", fontWeight: 700, margin: 0 }}>
                     AI Claim Review
                   </p>
-                  <h3
-                    style={{
-                      margin: "8px 0 0 0",
-                      fontSize: "30px",
-                      color: dark,
-                    }}
-                  >
+                  <h3 style={{ margin: "8px 0 0 0", fontSize: "30px", color: dark }}>
                     Your structured review is ready
                   </h3>
                 </div>
@@ -871,7 +884,6 @@ export default function App() {
               >
                 {aiSections.map((section, index) => {
                   const lower = section.title.toLowerCase();
-
                   let tone = "default";
                   if (lower.includes("disclaimer")) tone = "warning";
                   if (lower.includes("starting point")) tone = "info";
@@ -886,15 +898,154 @@ export default function App() {
                   );
                 })}
               </div>
+
+              <div
+                style={{
+                  marginTop: "28px",
+                  border: `1px solid ${border}`,
+                  borderRadius: "24px",
+                  padding: "24px",
+                  backgroundColor: "#ffffff",
+                }}
+              >
+                <p style={{ color: muted, fontSize: "14px", fontWeight: 700, marginTop: 0 }}>
+                  Draft Support Letters
+                </p>
+                <h3 style={{ margin: "8px 0 14px 0", fontSize: "28px", color: dark }}>
+                  Generate ready-to-edit draft examples
+                </h3>
+                <p style={{ color: muted, lineHeight: 1.8, fontSize: "15px", marginTop: 0 }}>
+                  These are educational draft templates only. They must be reviewed,
+                  corrected if needed, and signed by the appropriate medical
+                  professional, witness, or veteran before use.
+                </p>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "12px",
+                    flexWrap: "wrap",
+                    marginTop: "16px",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => generateDraft("nexus")}
+                    style={{
+                      backgroundColor: blue,
+                      color: "#ffffff",
+                      padding: "12px 16px",
+                      borderRadius: "12px",
+                      border: "none",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Generate Nexus Draft
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => generateDraft("buddy")}
+                    style={{
+                      backgroundColor: "#0f766e",
+                      color: "#ffffff",
+                      padding: "12px 16px",
+                      borderRadius: "12px",
+                      border: "none",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Generate Buddy Letter Draft
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => generateDraft("statement")}
+                    style={{
+                      backgroundColor: "#7c3aed",
+                      color: "#ffffff",
+                      padding: "12px 16px",
+                      borderRadius: "12px",
+                      border: "none",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Generate Personal Statement Draft
+                  </button>
+                </div>
+
+                {draftText && (
+                  <div
+                    style={{
+                      marginTop: "20px",
+                      border: `1px solid ${border}`,
+                      borderRadius: "18px",
+                      backgroundColor: light,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: "14px 16px",
+                        borderBottom: `1px solid ${border}`,
+                        backgroundColor: "#ffffff",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: "12px",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <strong style={{ color: dark }}>
+                        {draftType === "nexus"
+                          ? "Nexus Letter Draft"
+                          : draftType === "buddy"
+                          ? "Buddy Letter Draft"
+                          : "Statement in Support Draft"}
+                      </strong>
+
+                      <button
+                        type="button"
+                        onClick={copyDraft}
+                        style={{
+                          backgroundColor: accent,
+                          color: "#ffffff",
+                          padding: "10px 14px",
+                          borderRadius: "10px",
+                          border: "none",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Copy Draft
+                      </button>
+                    </div>
+
+                    <pre
+                      style={{
+                        margin: 0,
+                        padding: "18px",
+                        whiteSpace: "pre-wrap",
+                        fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+                        fontSize: "14px",
+                        lineHeight: 1.7,
+                        color: dark,
+                      }}
+                    >
+                      {draftText}
+                    </pre>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </section>
 
         <section
-          style={{
-            ...sectionStyle,
-            borderTop: `1px solid ${border}`,
-          }}
+          style={{ ...sectionStyle, borderTop: `1px solid ${border}` }}
         >
           <div
             style={{
@@ -904,34 +1055,15 @@ export default function App() {
             }}
           >
             <div>
-              <p
-                style={{
-                  color: muted,
-                  fontSize: "14px",
-                  fontWeight: 700,
-                  margin: 0,
-                }}
-              >
+              <p style={{ color: muted, fontSize: "14px", fontWeight: 700, margin: 0 }}>
                 What it helps with
               </p>
-              <h2
-                style={{
-                  fontSize: "38px",
-                  margin: "14px 0 0",
-                  color: dark,
-                }}
-              >
+              <h2 style={{ fontSize: "38px", margin: "14px 0 0", color: dark }}>
                 Clearer insights before your next move
               </h2>
             </div>
 
-            <div
-              style={{
-                color: muted,
-                lineHeight: 1.9,
-                fontSize: "17px",
-              }}
-            >
+            <div style={{ color: muted, lineHeight: 1.9, fontSize: "17px" }}>
               <p>Identify possible conditions and secondaries found in your documents.</p>
               <p>Spot missing evidence that may need more support or clarification.</p>
               <p>Turn complex claim language into a more understandable format.</p>
@@ -941,129 +1073,13 @@ export default function App() {
 
         <section
           id="join"
-          style={{
-            ...sectionStyle,
-            borderTop: `1px solid ${border}`,
-          }}
+          style={{ ...sectionStyle, borderTop: `1px solid ${border}` }}
         >
           <div style={{ maxWidth: "720px" }}>
-            <p
-              style={{
-                color: muted,
-                fontSize: "14px",
-                fontWeight: 700,
-                margin: 0,
-              }}
-            ><section
-  style={{
-    ...sectionStyle,
-    borderTop: `1px solid ${border}`,
-  }}
->
-  <div style={{ maxWidth: "920px" }}>
-    <p
-      style={{
-        color: muted,
-        fontSize: "14px",
-        fontWeight: 700,
-        margin: 0,
-      }}
-    >
-      Supporting Claim Evidence
-    </p>
-    <h2
-      style={{
-        fontSize: "38px",
-        margin: "14px 0 16px",
-        color: dark,
-      }}
-    >
-      Documents that may help strengthen a claim
-    </h2>
-    <p
-      style={{
-        color: muted,
-        lineHeight: 1.8,
-        fontSize: "18px",
-        marginTop: 0,
-      }}
-    >
-      These supporting documents can help strengthen a VA disability claim by
-      explaining severity, service connection, daily impact, and secondary conditions.
-    </p>
-
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-        gap: "18px",
-        marginTop: "28px",
-      }}
-    >
-      <ResultCard
-        title="1. Nexus Letter"
-        body={`**Purpose:** A nexus letter provides a professional medical opinion connecting a current diagnosis to an in-service event, injury, illness, or exposure.
-
-**Why it matters:** A DBQ helps describe severity, but a nexus letter helps explain why the condition may be related to military service.
-
-**Who typically writes it:** A licensed healthcare professional such as an MD, DO, NP, PA, or psychologist, depending on the condition.`}
-        tone="info"
-      />
-
-      <ResultCard
-        title="2. Statement in Support of Claim"
-        body={`**Purpose:** This is the veteran’s personal statement describing when symptoms began, how they have continued or worsened, and how they affect daily life, relationships, and work.
-
-**Why it matters:** It helps fill in gaps when medical or service records are limited, especially for conditions like PTSD, migraines, sleep issues, or pain.`}
-      />
-
-      <ResultCard
-        title="3. Buddy Letter"
-        body={`**Purpose:** A buddy letter helps support a claim by providing observations from people who knew the veteran during or after service.
-
-**Who can write one:** Fellow service members, family members, friends, coworkers, or employers.
-
-**Why it matters:** These letters can help show behavioral, emotional, or physical changes that support the veteran’s account.`}
-      />
-
-      <ResultCard
-        title="4. Secondary Condition Letter"
-        body={`**Purpose:** This type of letter explains how one condition may have caused or aggravated another condition.
-
-**Why it matters:** It is especially useful when a veteran is claiming a secondary condition, such as migraines, depression, erectile dysfunction, or sleep issues caused or worsened by an already service-connected disability.
-
-**Best use:** It should clearly explain the medical relationship between the primary and secondary condition.`}
-        tone="warning"
-      />
-    </div>
-
-    <div
-      style={{
-        marginTop: "22px",
-        padding: "18px 20px",
-        borderRadius: "18px",
-        border: `1px solid ${border}`,
-        backgroundColor: "#ffffff",
-      }}
-    >
-      <p style={{ margin: 0, color: muted, lineHeight: 1.8, fontSize: "14px" }}>
-        <strong style={{ color: dark }}>Disclaimer:</strong> This information is for
-        educational purposes only and is not legal or medical advice. Veterans should
-        consider speaking with an accredited representative or licensed medical
-        professional for guidance specific to their case.
-      </p>
-    </div>
-  </div>
-</section>
+            <p style={{ color: muted, fontSize: "14px", fontWeight: 700, margin: 0 }}>
               Join
             </p>
-            <h2
-              style={{
-                fontSize: "38px",
-                margin: "14px 0 0",
-                color: dark,
-              }}
-            >
+            <h2 style={{ fontSize: "38px", margin: "14px 0 0", color: dark }}>
               Get updates as the platform is built
             </h2>
             <p
