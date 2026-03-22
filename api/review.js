@@ -1,3 +1,5 @@
+import { applyRules } from "./rules";
+
 export default function handler(req, res) {
   if (req.method === "GET") {
     return res.status(200).json({ ok: true, method: "GET" });
@@ -11,14 +13,28 @@ export default function handler(req, res) {
         body = JSON.parse(body);
       }
 
+      const {
+        serviceConnected,
+        currentRating,
+        conditions,
+        symptoms,
+        goal,
+      } = body;
+
+      const rules = applyRules({
+        serviceConnected,
+        currentRating,
+        conditions,
+        symptoms,
+        goal,
+      });
+
       return res.status(200).json({
-        ok: true,
-        method: "POST",
-        body,
+        output: JSON.stringify(rules, null, 2),
       });
     } catch (error) {
       return res.status(500).json({
-        error: error?.message || "Body parsing failed",
+        error: error?.message || "Rules processing failed",
       });
     }
   }
