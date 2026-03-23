@@ -1,0 +1,38 @@
+[
+  {
+    "regulation_family": "38 CFR Part 3",
+    "topic": "secondary service connection",
+    "trigger_keywords": ["ptsd", "headaches", "migraine", "sleep disturbance", "erectile dysfunction", "ed"],
+    "evidence_focus": [
+      "medical nexus opinion",
+      "symptom timeline",
+      "treatment records",
+      "lay statements"
+    ],
+    "notes": "Possible secondary-condition pathway when symptoms are linked to a service-connected condition."
+  },
+  {
+    "regulation_family": "38 CFR Part 4",
+    "topic": "rating severity",
+    "trigger_keywords": ["worsening", "increase", "daily", "frequent", "severe"],
+    "evidence_focus": [
+      "frequency of symptoms",
+      "severity",
+      "impact on work",
+      "impact on daily life"
+    ],
+    "notes": "Focus on severity and functional impact when evaluating rating increase."
+  },
+  {
+    "regulation_family": "PACT Act",
+    "topic": "toxic exposure presumptive",
+    "trigger_keywords": ["burn pit", "iraq", "afghanistan", "toxic exposure", "asthma", "rhinitis", "sinusitis"],
+    "evidence_focus": [
+      "deployment location",
+      "diagnosis",
+      "service dates",
+      "exposure history"
+    ],
+    "notes": "Check presumptive eligibility before requiring nexus."
+  }
+]
