@@ -10,8 +10,8 @@ const features = [
     text: "Surface conditions, possible secondaries, symptoms, and evidence gaps in plain English.",
   },
   {
-    title: "Simple dashboards",
-    text: "Use clean Power BI visuals to organize trends, patterns, and claim preparation insights.",
+    title: "Claim readiness view",
+    text: "See how complete your intake is before deciding your next move.",
   },
 ];
 
@@ -19,17 +19,32 @@ const steps = [
   {
     number: "01",
     title: "Upload",
-    text: "Add your documents for structured review.",
+    text: "Add your documents and claim details for structured review.",
   },
   {
     number: "02",
     title: "Analyze",
-    text: "AI reviews key findings and possible gaps.",
+    text: "AI reviews findings, possible gaps, and areas that may need support.",
   },
   {
     number: "03",
-    title: "Understand",
-    text: "Get a clearer view of what may need attention next.",
+    title: "Act",
+    text: "Use the results and draft tools to prepare stronger next steps.",
+  },
+];
+
+const tools = [
+  {
+    title: "Claim Review",
+    text: "Review conditions, symptoms, ratings, and goals in one place.",
+  },
+  {
+    title: "Evidence Gap Finder",
+    text: "Spot missing support, weak areas, and items that may need more documentation.",
+  },
+  {
+    title: "Draft Builder",
+    text: "Generate ready-to-edit nexus, buddy, and personal statement drafts.",
   },
 ];
 
@@ -296,6 +311,27 @@ Date: _________________________________
 `;
 }
 
+function InfoStat({ label, value }) {
+  return (
+    <div
+      style={{
+        border: `1px solid ${border}`,
+        borderRadius: "18px",
+        padding: "18px",
+        backgroundColor: "#ffffff",
+        boxShadow: "0 8px 24px rgba(15, 23, 42, 0.04)",
+      }}
+    >
+      <p style={{ margin: 0, fontSize: "13px", color: muted, fontWeight: 700 }}>
+        {label}
+      </p>
+      <h3 style={{ margin: "8px 0 0 0", fontSize: "22px", color: dark }}>
+        {value}
+      </h3>
+    </div>
+  );
+}
+
 export default function App() {
   const [formData, setFormData] = useState({
     serviceConnected: "",
@@ -390,6 +426,16 @@ export default function App() {
 
   const aiSections = useMemo(() => parseAiSections(aiResult), [aiResult]);
 
+  const completionScore = useMemo(() => {
+    let score = 0;
+    if (formData.serviceConnected) score += 20;
+    if (formData.currentRating) score += 20;
+    if (formData.conditions) score += 20;
+    if (formData.symptoms) score += 20;
+    if (formData.goal) score += 20;
+    return score;
+  }, [formData]);
+
   return (
     <div
       style={{
@@ -445,6 +491,9 @@ export default function App() {
             <a href="#features" style={{ color: "inherit", textDecoration: "none" }}>
               Features
             </a>
+            <a href="#tools" style={{ color: "inherit", textDecoration: "none" }}>
+              Tools
+            </a>
             <a href="#how" style={{ color: "inherit", textDecoration: "none" }}>
               How it works
             </a>
@@ -460,79 +509,166 @@ export default function App() {
 
       <main>
         <section style={sectionStyle}>
-          <div style={{ maxWidth: "760px" }}>
-            <p style={{ color: muted, fontSize: "14px", fontWeight: 700, margin: 0 }}>
-              Veteran Claim Intelligence Platform
-            </p>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+              gap: "32px",
+              alignItems: "center",
+            }}
+          >
+            <div style={{ maxWidth: "760px" }}>
+              <p style={{ color: muted, fontSize: "14px", fontWeight: 700, margin: 0 }}>
+                Veteran Claim Intelligence Platform
+              </p>
 
-            <h1
-              style={{
-                fontSize: "56px",
-                lineHeight: 1.05,
-                letterSpacing: "-0.03em",
-                margin: "18px 0 20px",
-                color: dark,
-              }}
-            >
-              Understand your VA disability claim with more clarity
-            </h1>
+              <h1
+                style={{
+                  fontSize: "56px",
+                  lineHeight: 1.05,
+                  letterSpacing: "-0.03em",
+                  margin: "18px 0 20px",
+                  color: dark,
+                }}
+              >
+                Build a stronger VA claim with more clarity
+              </h1>
 
-            <p
-              style={{
-                fontSize: "20px",
-                lineHeight: 1.7,
-                color: muted,
-                maxWidth: "720px",
-                margin: 0,
-              }}
-            >
-              Tactical Claims AI helps veterans organize claim information, review
-              symptoms, and generate clearer next-step guidance before filing or
-              pursuing an increase.
-            </p>
+              <p
+                style={{
+                  fontSize: "20px",
+                  lineHeight: 1.7,
+                  color: muted,
+                  maxWidth: "720px",
+                  margin: 0,
+                }}
+              >
+                Tactical Claims AI helps veterans review documents, identify evidence gaps,
+                organize symptoms, and generate clearer next-step guidance before filing or
+                pursuing an increase.
+              </p>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: "14px",
+                  marginTop: "32px",
+                  flexWrap: "wrap",
+                }}
+              >
+                <a
+                  href="#review"
+                  style={{
+                    backgroundColor: accent,
+                    color: "#ffffff",
+                    padding: "14px 22px",
+                    borderRadius: "14px",
+                    textDecoration: "none",
+                    fontWeight: 600,
+                    boxShadow: "0 10px 24px rgba(17, 24, 39, 0.18)",
+                  }}
+                >
+                  Start Claim Review
+                </a>
+
+                <a
+                  href="#how"
+                  style={{
+                    border: `1px solid ${border}`,
+                    color: dark,
+                    padding: "14px 22px",
+                    borderRadius: "14px",
+                    textDecoration: "none",
+                    fontWeight: 600,
+                    backgroundColor: "#ffffff",
+                  }}
+                >
+                  See how it works
+                </a>
+              </div>
+
+              <div
+                style={{
+                  marginTop: "22px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  padding: "12px 16px",
+                  borderRadius: "14px",
+                  border: `1px solid ${border}`,
+                  backgroundColor: "#ffffff",
+                  boxShadow: "0 8px 24px rgba(15, 23, 42, 0.04)",
+                }}
+              >
+                <span style={{ color: muted, fontSize: "14px", fontWeight: 600 }}>
+                  Claim Readiness
+                </span>
+                <span style={{ color: dark, fontSize: "16px", fontWeight: 800 }}>
+                  {completionScore}%
+                </span>
+              </div>
+
+              <p style={{ marginTop: "16px", fontSize: "13px", color: muted }}>
+                Educational use only. Not legal or medical advice.
+              </p>
+            </div>
 
             <div
               style={{
-                display: "flex",
-                gap: "14px",
-                marginTop: "32px",
-                flexWrap: "wrap",
+                border: `1px solid ${border}`,
+                borderRadius: "24px",
+                padding: "24px",
+                backgroundColor: "#ffffff",
+                boxShadow: "0 10px 30px rgba(15, 23, 42, 0.05)",
               }}
             >
-              <a
-                href="#review"
-                style={{
-                  backgroundColor: accent,
-                  color: "#ffffff",
-                  padding: "14px 22px",
-                  borderRadius: "14px",
-                  textDecoration: "none",
-                  fontWeight: 600,
-                  boxShadow: "0 10px 24px rgba(17, 24, 39, 0.18)",
-                }}
-              >
-                Start Claim Review
-              </a>
+              <p style={{ color: muted, fontSize: "14px", fontWeight: 700, margin: 0 }}>
+                Platform Snapshot
+              </p>
 
-              <a
-                href="#how"
+              <h3 style={{ fontSize: "30px", margin: "10px 0 18px", color: dark }}>
+                Claim Intelligence View
+              </h3>
+
+              <div style={{ display: "grid", gap: "14px" }}>
+                <InfoStat label="Readiness Score" value={`${completionScore}%`} />
+                <InfoStat
+                  label="Uploaded File"
+                  value={uploadedFile ? uploadedFile.name : "No file selected"}
+                />
+                <InfoStat
+                  label="Current Goal"
+                  value={formData.goal || "No goal selected"}
+                />
+              </div>
+
+              <div
                 style={{
+                  marginTop: "18px",
                   border: `1px solid ${border}`,
-                  color: dark,
-                  padding: "14px 22px",
-                  borderRadius: "14px",
-                  textDecoration: "none",
-                  fontWeight: 600,
-                  backgroundColor: "#ffffff",
+                  borderRadius: "18px",
+                  padding: "18px",
+                  backgroundColor: "#f8fafc",
                 }}
               >
-                See how it works
-              </a>
-            </div>
+                <p style={{ margin: 0, fontSize: "13px", color: muted, fontWeight: 700 }}>
+                  What this helps you do
+                </p>
 
-            <p style={{ marginTop: "16px", fontSize: "13px", color: muted }}>
-              Educational use only. Not legal or medical advice.
-            </p>
+                <ul
+                  style={{
+                    margin: "12px 0 0 0",
+                    paddingLeft: "20px",
+                    color: muted,
+                    lineHeight: 1.8,
+                  }}
+                >
+                  <li>Review symptoms and claimed conditions in one place</li>
+                  <li>See how complete your intake is before moving forward</li>
+                  <li>Generate draft support letters after review</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -563,6 +699,47 @@ export default function App() {
                 </h2>
                 <p style={{ color: muted, lineHeight: 1.8, margin: 0 }}>
                   {feature.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section
+          id="tools"
+          style={{ ...sectionStyle, borderTop: `1px solid ${border}` }}
+        >
+          <div style={{ maxWidth: "640px", marginBottom: "28px" }}>
+            <p style={{ color: muted, fontSize: "14px", fontWeight: 700, margin: 0 }}>
+              Tools
+            </p>
+            <h2 style={{ fontSize: "38px", margin: "14px 0 0", color: dark }}>
+              Built like a platform, not just a form
+            </h2>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+              gap: "22px",
+            }}
+          >
+            {tools.map((tool) => (
+              <div
+                key={tool.title}
+                style={{
+                  border: `1px solid ${border}`,
+                  borderRadius: "24px",
+                  padding: "28px",
+                  backgroundColor: "#ffffff",
+                }}
+              >
+                <h3 style={{ fontSize: "24px", margin: "0 0 10px", color: dark }}>
+                  {tool.title}
+                </h3>
+                <p style={{ color: muted, lineHeight: 1.8, margin: 0 }}>
+                  {tool.text}
                 </p>
               </div>
             ))}
@@ -878,6 +1055,25 @@ export default function App() {
               <div
                 style={{
                   display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: "16px",
+                  marginBottom: "22px",
+                }}
+              >
+                <InfoStat label="Readiness Score" value={`${completionScore}%`} />
+                <InfoStat
+                  label="Uploaded File"
+                  value={uploadedFile ? uploadedFile.name : "No file selected"}
+                />
+                <InfoStat
+                  label="Claim Goal"
+                  value={formData.goal || "Not selected"}
+                />
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
                   gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
                   gap: "18px",
                 }}
@@ -912,7 +1108,7 @@ export default function App() {
                   Draft Support Letters
                 </p>
                 <h3 style={{ margin: "8px 0 14px 0", fontSize: "28px", color: dark }}>
-                  Generate ready-to-edit draft examples
+                  Support Draft Builder
                 </h3>
                 <p style={{ color: muted, lineHeight: 1.8, fontSize: "15px", marginTop: 0 }}>
                   These are educational draft templates only. They must be reviewed,
